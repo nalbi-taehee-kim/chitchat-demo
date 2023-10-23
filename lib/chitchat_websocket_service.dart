@@ -18,7 +18,7 @@ class ChitchatWebsocketService {
     initializeConnection();
   }
 
-  Stream<dynamic> get stream => _usersController.stream;
+  Stream<List<String>> get stream => _usersController.stream;
 
   void initializeConnection() {
     log("initializeConnection");

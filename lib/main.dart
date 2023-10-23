@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:matching_prototype/chitchat_websocket_provider.dart';
+
+import 'chitchat_websocket_provider.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends HookWidget {
   const MyApp({super.key});
+
+  void _connectWebsocket() {}
+  void _sendMatch() {}
+  void _sendMatchResponse() {}
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final idController = useTextEditingController();
+    final targetIdController = useTextEditingController();
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -33,16 +41,42 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: Consumer(
-        builder: (context, ref, child) {
-          final chitchatUserList = ref.watch(chitchatWebsocketProvider);
-          return chitchatUserList.when(
-              data: (data) => Text(
-                    'Received data: $data',
-                  ),
-              error: (error, _) => Text('Error: $error'),
-              loading: () => const CircularProgressIndicator());
-        },
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Riverpod Websocket Test'),
+        ),
+        body: Column(
+          children: [
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: idController,
+                  decoration: const InputDecoration(labelText: "Your user id"),
+                )),
+            ElevatedButton(
+                onPressed: _connectWebsocket, child: const Text("connect")),
+            Expanded(child: Consumer(
+              builder: (context, ref, child) {
+                final state = ref.watch(chitchatWebsocketProvider);
+                if (state is AsyncLoading) return const CircularProgressIndicator();
+                if (state.value == null) return const SizedBox();
+                return ListView.builder(
+                    itemCount: state.value?.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(state.value.toString()),
+                      );
+                    });
+              }
+            )),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: targetIdController,
+                  decoration: const InputDecoration(labelText: "Target user id"),
+                )),
+          ],
+        ),
       ),
     );
   }
